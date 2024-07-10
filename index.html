@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Code Editor</title>
+    <!-- Include CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <!-- Include multiple CodeMirror themes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/ambiance.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/nord.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/rubyblue.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/solarized.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/twilight.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #282a36;
+            color: #f8f8f2;
+        }
+        #editor {
+            width: 80%;
+            height: 500px;
+            border: 2px solid #f8f8f2;
+            margin-top: 10px;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button, select {
+            padding: 10px;
+            margin: 5px;
+            background-color: #44475a;
+            color: #f8f8f2;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover, select:hover {
+            background-color: #6272a4;
+        }
+    </style>
+</head>
+<body>
+    <h1>KrakHedKoding</h1>
+    <div class="controls">
+        <select id="language">
+            <option value="htmlmixed">HTML</option>
+            <option value="css">CSS</option>
+            <option value="javascript">JavaScript</option>
+            <option value="clike">C#</option>
+            <option value="clike">C++</option>
+            <option value="rust">Rust</option>
+            <option value="python">Python</option>
+            <option value="ruby">Ruby</option>
+            <option value="go">Go</option>
+            <option value="php">PHP</option>
+            <option value="perl">Perl</option>
+            <option value="sql">SQL</option>
+            <option value="swift">Swift</option>
+            <option value="lua">Lua</option>
+        </select>
+        <select id="theme">
+            <option value="default">Default</option>
+            <option value="dracula">Dracula</option>
+            <option value="monokai">Monokai</option>
+            <option value="ambiance">Ambiance</option>
+            <option value="eclipse">Eclipse</option>
+            <option value="material">Material</option>
+            <option value="nord">Nord</option>
+            <option value="rubyblue">RubyBlue</option>
+            <option value="solarized dark">Solarized Dark</option>
+            <option value="solarized light">Solarized Light</option>
+            <option value="twilight">Twilight</option>
+        </select>
+        <button onclick="importCode()">Import Code</button>
+        <button onclick="exportCode()">Export Code</button>
+        <input type="file" id="fileInput" style="display: none;">
+    </div>
+    <textarea id="editor"></textarea>
+
+    <!-- Include CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <!-- Include CodeMirror modes for various languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/rust/rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/ruby/ruby.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/go/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/php/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/perl/perl.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/swift/swift.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/lua/lua.min.js"></script>
+    <script>
+        const defaultCode = {
+            "htmlmixed": "<!DOCTYPE html>\n<html>\n<head>\n\t<title>Title</title>\n</head>\n<body>\n\t<h1>Hello, World!</h1>\n</body>\n</html>",
+            "css": "body {\n\tfont-family: Arial, sans-serif;\n}\n\nh1 {\n\tcolor: #333;\n}",
+            "javascript": "function greet() {\n\tconsole.log('Hello, World!');\n}\n\ngreet();",
+            "clike": "// C++ Example\n#include <iostream>\nusing namespace std;\n\nint main() {\n\tcout << \"Hello, World!\" << endl;\n\treturn 0;\n}",
+            "rust": "// Rust Example\nfn main() {\n\tprintln!(\"Hello, World!\");\n}",
+            "python": "def greet():\n\tprint('Hello, World!')\n\ngreet()",
+            "ruby": "def greet\n\tputs 'Hello, World!'\nend\n\ngreet",
+            "go": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello, World!\")\n}",
+            "php": "<?php\necho 'Hello, World!';\n?>",
+            "perl": "print \"Hello, World!\\n\";",
+            "sql": "-- SQL Example\nSELECT 'Hello, World!';",
+            "swift": "// Swift Example\nprint(\"Hello, World!\")",
+            "lua": "-- Lua Example\nprint('Hello, World!')"
+        };
+
+        const fileExtensions = {
+            "htmlmixed": "html",
+            "css": "css",
+            "javascript": "js",
+            "clike": "cpp", // or "cs" for C#
+            "rust": "rs",
+            "python": "py",
+            "ruby": "rb",
+            "go": "go",
+            "php": "php",
+            "perl": "pl",
+            "sql": "sql",
+            "swift": "swift",
+            "lua": "lua"
+        };
+
+        let editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+            lineNumbers: true,
+            theme: "ambiance",
+            mode: "htmlmixed",
+            value: defaultCode["htmlmixed"]
+        });
+
+        window.onload = function() {
+            editor.setValue(defaultCode["htmlmixed"]);
+        }
+
+        document.getElementById("language").addEventListener("change", function() {
+            let mode = this.value;
+            editor.setOption("mode", mode);
+            editor.setValue(defaultCode[mode] || "");
+        });
+
+        document.getElementById("theme").addEventListener("change", function() {
+            let theme = this.value;
+            editor.setOption("theme", theme);
+        });
+
+        function importCode() {
+            document.getElementById("fileInput").click();
+        }
+
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    editor.setValue(e.target.result);
+                }
+                reader.readAsText(file);
+            }
+        });
+
+        function exportCode() {
+            let code = editor.getValue();
+            let language = document.getElementById("language").value;
+            let extension = fileExtensions[language] || "txt";
+            let blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = `code.${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
